@@ -1,3 +1,4 @@
 setxkbmap -option caps:escape
+xmodmap -e "keycode 62 = slash question"
 
 xset r rate 200 40

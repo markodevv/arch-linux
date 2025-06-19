@@ -35,6 +35,9 @@ exec --no-startup-id xss-lock --transfer-sleep-lock ~/.config/scripts/lock
 # and nm-applet is a desktop environment-independent system tray GUI for it.
 exec --no-startup-id nm-applet
 
+# Bind the toggle monitor script
+bindsym F12 exec ~/.config/scripts/togglemonitor
+
 #exec xrandr --output eDP --scale 1.0x1.0
 #exec xrandr --output eDP --brightness 0.7777777
 

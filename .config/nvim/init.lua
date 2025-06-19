@@ -29,6 +29,8 @@ require('packer').startup(function(use)
 end);
 
 ------------------
+vim.g.zig_fmt_autosave = 0
+vim.g.zig_recommended_style = 0
 
 -- Plugin configs --
 
@@ -158,7 +160,7 @@ local qf_window_open = false
 local qf_prev_win;
 
 local build_cmd = "py build.py" 
-local language = "odin"
+local language = "cpp"
 local lang_list = {
   "odin",
   "cpp",
@@ -524,7 +526,7 @@ local function on_exit(obj)
     local output_lines = vim.split(obj.stdout, "\n", {plain = true})
 
     local function build_done(success)
-      local elapsed = os.clock() - build_start_time; 
+      local elapsed = os.difftime(os.clock(), build_start_time); 
       building_in_progress = false
       if success then
         print(string.format("Build SUCCESS - %.2f ms", elapsed * 1000))
@@ -825,7 +827,7 @@ vim.api.nvim_create_user_command("RaddbgAddBreakpoint",  raddbg_add_breakpoint, 
 -- Startup functions --
 
 --vim.cmd(":cd C:/work/project_")
---load_project()
+load_project()
 vim.cmd("syntax on")
 
 ------------------

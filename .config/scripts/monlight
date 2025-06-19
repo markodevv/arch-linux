@@ -1,0 +1,32 @@
+#!/bin/bash
+
+
+current=$(brightnessctl g)
+
+case "$1" in
+  up)
+
+    new=$((current + 30))
+
+    if [ "$new" -gt 255 ]; then
+      new=255
+    fi
+
+    brightnessctl s $new
+    ;;
+  down)
+
+    new=$((current - 30))
+
+    if [ "$new" -lt 0 ]; then
+      new=0
+    fi
+
+    brightnessctl s $new
+    ;;
+  *)
+    echo "Usage: $0 {up|down}"
+    exit 1
+    ;;
+esac
+
