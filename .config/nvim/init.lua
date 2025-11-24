@@ -59,6 +59,9 @@ local on_attach = function(client, bufnr)
     },
   }, bufnr)
 
+  -- Disable syntax highlight provided by lsp
+  client.server_capabilities.semanticTokensProvider = nil
+
   -- Enable completion triggered by <c-x><c-o>
   vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
   -- Mappings.
@@ -88,6 +91,11 @@ local lsp_flags = {
 }
 
 require'lspconfig'.ols.setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+}
+
+require'lspconfig'.zls.setup{
   on_attach = on_attach,
   flags = lsp_flags,
 }
@@ -159,12 +167,13 @@ vim.filetype.add({
 local qf_window_open = false
 local qf_prev_win;
 
-local build_cmd = "py build.py" 
+local build_cmd = {"py", "build.py"}
 local language = "cpp"
 local lang_list = {
   "odin",
   "cpp",
   "c",
+  "zig",
 }
 
 local project_dir = vim.fn.getcwd();
@@ -177,6 +186,7 @@ local error_formats =
   -- ["cpp"] = "%f:%l:%c: error: %m", -- clang
   ["c"] = "%f:%l:%c: error: %m", -- clang
   ["odin"] = "%f(%l:%c) Error: %m",
+  ["zig"] = "%f:%l:%c: error: %m",
 }
 
 local file_greps = 
@@ -184,6 +194,7 @@ local file_greps =
   ["cpp"] = "**/*.cpp **/*.h **/*.hpp **/*.c",
   ["c"] = "**/*.cpp **/*.h **/*.hpp **/*.c",
   ["odin"] = "**/*.odin **/*.hlsl **/*.hlsli",
+  ["zig"] = "**/*.zig **/*.hlsl **/*.hlsli",
 }
 
 local function_regex =
@@ -192,6 +203,7 @@ local function_regex =
   ["lua"] = {"\\v^((\\w[*&]?)+\\s+){1,3}(\\w(::)?)+\\(.*", "\\v(\\w(::)?)+\\(.*"},
   ["c"] = {"\\v^((\\w[*&]?)+\\s+){1,3}(\\w(::)?)+\\(.*", "\\v(\\w(::)?)+\\(.*"},
   ["odin"] = {"\\v^(\\w+\\s+::\\s+(#\\w+\\s+){0,2}proc(\\s+\"\\w+\"\\s+)?\\()", "\\v^\\w+"},
+  ["zig"] = {"\\v^(\\s*(pub\\s+)?(export\\s+)?fn\\s+\\w+\\s*\\()", "\\v^\\s*(pub\\s+)?(export\\s+)?fn\\s+\\zs\\w+"}
 }
 
 
@@ -526,12 +538,13 @@ local function on_exit(obj)
     local output_lines = vim.split(obj.stdout, "\n", {plain = true})
 
     local function build_done(success)
-      local elapsed = os.difftime(os.clock(), build_start_time); 
+      local elapsed_ns = vim.loop.hrtime() - build_start_time; 
+      local elapsed = elapsed_ns / 1000000;
       building_in_progress = false
       if success then
-        print(string.format("Build SUCCESS - %.2f ms", elapsed * 1000))
+        print(string.format("Build SUCCESS - %.0f ms", elapsed))
       else
-        print(string.format("Build FAILED - %.2f ms", elapsed * 1000))
+        print(string.format("Build FAILED - %.0f ms", elapsed))
       end
     end
 
@@ -579,9 +592,10 @@ local function build_project()
     return
   end
   print("Building..");
+  vim.fn.setqflist({})
   building_in_progress = true
-  build_start_time = os.clock()
-  vim.system({"./" .. build_cmd}, {text = true}, on_exit);
+  build_start_time = vim.loop.hrtime()
+  vim.system(build_cmd, {text = true}, on_exit);
 end
 
 local function complete()
@@ -792,18 +806,21 @@ local function load_project()
   end
 
   project_dir = vim.fn.getcwd();
+  build_cmd = {};
 
   for i = 1, #lines do
     local parts = vim.split(lines[i], "%s+", {trimempty = true})
     if #parts > 1 then
       if parts[1] == "language" then
         if valid_language(parts[2]) then
-          language = parts[2]
+          language = table.concat(parts, " ", 2);
         end
       elseif parts[1] == "app_exe" then
-        app_exe = parts[2];
+        app_exe = table.concat(parts, " ", 2);
       elseif parts[1] == "build_cmd" then
-        build_cmd = parts[2];
+        for j = 2, #parts do
+          build_cmd[j-1] = parts[j];
+        end
       end
     end
   end
@@ -814,7 +831,7 @@ local function load_project()
   print("  language    - " .. language)
   print("  app_exe     - " .. app_exe)
   print("  project_dir - " .. project_dir)
-  print("  build_cmd   - " .. build_cmd)
+  print("  build_cmd   - " .. table.concat(build_cmd, " "))
 end
 
 vim.api.nvim_create_user_command("LoadProject",          load_project, {})

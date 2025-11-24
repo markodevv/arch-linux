@@ -6,7 +6,7 @@ current=$(brightnessctl g)
 case "$1" in
   up)
 
-    new=$((current + 30))
+    new=$((current + 17))
 
     if [ "$new" -gt 255 ]; then
       new=255
@@ -16,7 +16,7 @@ case "$1" in
     ;;
   down)
 
-    new=$((current - 30))
+    new=$((current - 17))
 
     if [ "$new" -lt 0 ]; then
       new=0
