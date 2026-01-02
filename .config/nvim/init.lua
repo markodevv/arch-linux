@@ -31,6 +31,7 @@ end);
 ------------------
 vim.g.zig_fmt_autosave = 0
 vim.g.zig_recommended_style = 0
+--vim.g.termguicolors = false
 
 -- Plugin configs --
 
@@ -96,6 +97,11 @@ require'lspconfig'.ols.setup{
 }
 
 require'lspconfig'.zls.setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+}
+
+require'lspconfig'.ccls.setup{
   on_attach = on_attach,
   flags = lsp_flags,
 }
