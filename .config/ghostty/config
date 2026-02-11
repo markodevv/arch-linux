@@ -45,3 +45,8 @@
 theme = Arthur
 background-opacity = 0.7
 window-decoration=none
+font-family = "Liberation Mono"
+font-style = Regular
+font-size = 12
+#font-thicken-strength = 255
+#font-thicken = true

@@ -174,6 +174,7 @@ local qf_window_open = false
 local qf_prev_win;
 
 local build_cmd = {"py", "build.py"}
+local debug_cmd
 local language = "cpp"
 local lang_list = {
   "odin",
@@ -535,7 +536,7 @@ local function normalize_spaces(text)
   return text:match("^%s*(.-)%s*$"):gsub("%s+", " ")
 end
 
-local function on_exit(obj)
+local function on_build_exit(obj)
   
   vim.schedule(function() 
 
@@ -601,7 +602,15 @@ local function build_project()
   vim.fn.setqflist({})
   building_in_progress = true
   build_start_time = vim.loop.hrtime()
-  vim.system(build_cmd, {text = true}, on_exit);
+  vim.system(build_cmd, {text = true}, on_build_exit);
+end
+
+local function debug_project()
+  print("Running");
+  local temp = debug_cmd;
+  table.insert(temp, 1, "-e");
+  table.insert(temp, 1, "ghostty");
+  vim.fn.jobstart(temp);
 end
 
 local function complete()
@@ -741,11 +750,20 @@ local function valid_language(lang)
 end
 
 local function run_project()
-  if app_exe == "" or project_dir == "" then 
+  if app_exe == "" then 
     return 
   end
 
-  vim.uv.spawn(project_dir .. "/build/" .. app_exe, {hide = false, detached = true})
+  local exe_dir = ""
+
+  if language == "zig" then
+    exe_dir = "./build/bin/"
+  end
+
+  vim.api.nvim_echo({{"Running '" .. app_exe .. "'..."}}, false, {});
+  local cmd = {exe_dir .. app_exe};
+  --vim.uv.spawn(exe_dir .. app_exe, {hide = false, detached = true})
+  vim.fn.jobstart(cmd);
 end
 
 local function raddbg_open()
@@ -813,6 +831,7 @@ local function load_project()
 
   project_dir = vim.fn.getcwd();
   build_cmd = {};
+  debug_cmd = {};
 
   for i = 1, #lines do
     local parts = vim.split(lines[i], "%s+", {trimempty = true})
@@ -827,6 +846,10 @@ local function load_project()
         for j = 2, #parts do
           build_cmd[j-1] = parts[j];
         end
+      elseif parts[1] == "debug_cmd" then
+        for j = 2, #parts do
+          debug_cmd[j-1] = parts[j];
+        end
       end
     end
   end
@@ -838,11 +861,13 @@ local function load_project()
   print("  app_exe     - " .. app_exe)
   print("  project_dir - " .. project_dir)
   print("  build_cmd   - " .. table.concat(build_cmd, " "))
+  print("  debug_cmd   - " .. table.concat(debug_cmd, " "))
 end
 
 vim.api.nvim_create_user_command("LoadProject",          load_project, {})
 vim.api.nvim_create_user_command("LaunchDebugger",       raddbg_open, {})
 vim.api.nvim_create_user_command("RunProject",           run_project,  {})
+vim.api.nvim_create_user_command("DebugProject",         debug_project,  {})
 vim.api.nvim_create_user_command("RaddbgRun",            raddbg_run_project,  {})
 vim.api.nvim_create_user_command("RaddbgAddBreakpoint",  raddbg_add_breakpoint,  {})
 ------------------
@@ -875,11 +900,12 @@ vim.keymap.set("n", "<C-f>", "*")
 vim.keymap.set("n", "<A-F>", ":e %:h/**/*")
 vim.keymap.set("n", "<C-n>", "<C-^>")
 vim.keymap.set("n", "<A-m>", build_project)
+vim.keymap.set("n", "<F5>", debug_project)
 vim.keymap.set("n", "<S-F3>", grep)
 vim.keymap.set("n", "m", mark)
 vim.keymap.set("n", "<S-m>", goto_mark)
 vim.keymap.set("n", "<F3>", project_grep)
-vim.keymap.set("n", "<F5>", run_project)
+vim.keymap.set("n", "<F4>", run_project)
 vim.keymap.set("n", "<F6>", raddbg_run_project)
 vim.keymap.set("n", "<F8>", raddbg_add_breakpoint)
 vim.keymap.set("n", "<S-F6>", raddbg_kill_all)

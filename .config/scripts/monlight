@@ -6,17 +6,17 @@ current=$(brightnessctl g)
 case "$1" in
   up)
 
-    new=$((current + 17))
+    new=$((current + 4500))
 
-    if [ "$new" -gt 255 ]; then
-      new=255
+    if [ "$new" -gt 62451 ]; then
+      new=62451
     fi
 
     brightnessctl s $new
     ;;
   down)
 
-    new=$((current - 17))
+    new=$((current - 4500))
 
     if [ "$new" -lt 0 ]; then
       new=0

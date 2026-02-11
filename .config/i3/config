@@ -236,7 +236,7 @@ bar {
                 urgent_workspace        $u-bgcolor      $u-bgcolor      $text   
 
         }
-        font pango:Font Awesome 6 Free Regular 8
+        font pango:Font Awesome 7 Free Solid 8
 }
 
 
