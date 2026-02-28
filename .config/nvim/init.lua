@@ -11,7 +11,7 @@
 -- [x] Grep project
 -- [x] Make completion prioritize closer words
 -- [ ] Make completion work on improted packages
--- [ ] Comment/Uncomment
+-- [x] Comment/Uncomment
 -- [x] Replace in range
 -- [ ] Replace in file
 -- [ ] Query replace
@@ -101,6 +101,10 @@ require'lspconfig'.zls.setup{
   flags = lsp_flags,
 }
 
+require'lspconfig'.ccls.setup{
+  on_attach = on_attach,
+  flags = lsp_flags,
+}
 require'lspconfig'.ccls.setup{
   on_attach = on_attach,
   flags = lsp_flags,
@@ -854,6 +858,11 @@ local function load_project()
     end
   end
 
+  -- Try to open todo.txt
+  if vim.fn.filereadable("./todo.txt") == 1 then
+    vim.cmd.edit("./todo.txt");
+  end
+
   --raddbg_open();
 
   print("Loaded project settings 'project.txt'")
@@ -863,6 +872,66 @@ local function load_project()
   print("  build_cmd   - " .. table.concat(build_cmd, " "))
   print("  debug_cmd   - " .. table.concat(debug_cmd, " "))
 end
+
+local function toggle_comment()
+  local mode = vim.fn.mode()
+  
+  if mode == 'n' then
+    local line = vim.api.nvim_get_current_line()
+    local row = vim.api.nvim_win_get_cursor(0)[1] - 1
+    
+    if line:match('^%s*//') then
+      -- uncomment: remove the first //
+      local new_line = line:gsub('//+', '', 1)
+      vim.api.nvim_buf_set_lines(0, row, row + 1, false, { new_line })
+    else
+      -- comment: add // at start preserving indentation
+      local indent, rest = line:match('^(%s*)(.*)')
+      vim.api.nvim_buf_set_lines(0, row, row + 1, false, { indent .. '//' .. rest })
+    end
+    
+  elseif mode == 'v' or mode == 'V' then
+    local start_row = vim.fn.line('v') - 1
+    local end_row = vim.fn.line('.') - 1
+    
+    -- ensure correct order
+    if start_row > end_row then
+      start_row, end_row = end_row, start_row
+    end
+    
+    local lines = vim.api.nvim_buf_get_lines(0, start_row, end_row + 1, false)
+    local empty_lines = {};
+    local all_commented = true;
+    
+    -- check if ALL lines are commented to decide toggle direction
+    for _, l in ipairs(lines) do
+      if not l:match('^%s*$') then 
+        if not l:match('^%s*//') then
+          all_commented = false
+          break
+        end
+      end
+    end
+    local new_lines = {}
+    for _, line in ipairs(lines) do
+      if all_commented then
+        table.insert(new_lines, (line:gsub('//+', '', 1)))
+      else
+        local indent, rest = line:match('^(%s*)(.*)')
+        if not line:match('^%s*$') then
+          table.insert(new_lines, indent .. '//' .. rest)
+        else
+          table.insert(new_lines, line)
+        end
+      end
+    end
+    
+    vim.api.nvim_buf_set_lines(0, start_row, end_row + 1, false, new_lines)
+    -- exit visual mode
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+  end
+end
+
 
 vim.api.nvim_create_user_command("LoadProject",          load_project, {})
 vim.api.nvim_create_user_command("LaunchDebugger",       raddbg_open, {})
@@ -915,12 +984,14 @@ vim.keymap.set("n", "<A-p>", goto_function)
 vim.keymap.set("n", "+", indent_scope)
 vim.keymap.set("n", "<C-t>", record_macro, {expr = true})
 vim.keymap.set("n", "<C-.>", "@a")
+vim.keymap.set("n", "<C-c>", toggle_comment)
 
 vim.keymap.set("v", "y", custom_visual_yank, {expr = true})
 vim.keymap.set("v", "c", custom_visual_cut, {expr = true})
 vim.keymap.set("v", "d", custom_visual_delete, {expr = true})
 vim.keymap.set("v", "s", ":s/");
 vim.keymap.set("v", "Y", "\"+y")
+vim.keymap.set("v", "<C-c>", toggle_comment)
 
 vim.keymap.set("i", "<C-t>", lsp_complete, {expr = true})
 vim.keymap.set("i", "<tab>", complete, {expr = true})
