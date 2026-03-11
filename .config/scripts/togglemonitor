@@ -4,9 +4,10 @@ if xrandr | grep "HDMI-A-0 connected"; then
   # External monitor is active, disable laptop monitor
   xrandr --output HDMI-A-0 --mode 1920x1080 --rate 144
   xrandr --output eDP --off
-  #xrandr --output eDP --mode 2560x1440 --rate 120 --right-of HDMI-A-0
+  echo "Xft.dpi: 96" | xrdb -merge
 else
   # Try to activate external monitor
   #xrandr --output eDP --auto
   xrandr --output eDP --mode 2560x1440 --rate 120 --left-of HDMI-A-0
+  echo "Xft.dpi: 126" | xrdb -merge
 fi
