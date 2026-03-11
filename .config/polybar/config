@@ -18,9 +18,11 @@
 
 [colors]
 background = #914f2d
-background-alt = #363636
+background-alt = #111111
 foreground = #B0B0B0
-foreground-alt = #F0F0F0
+foreground-alt = #a2a073
+foreground-ok = #63aa73
+foreground-fail = #aa7373
 primary = #ffb52a
 secondary = #e60053
 alert = #FF0000
@@ -34,6 +36,7 @@ fixed-center = true
 top = yes
 bottom = no
 override-redirect = false
+dpi = ${env:POLYBAR_DPI}
 
 foreground = ${colors.foreground-alt}
 background = ${colors.background-alt}
@@ -57,7 +60,7 @@ module-margin-left = 0
 module-margin-right = 0
 
 ;font-0 = Hack:pixelsize=9;3
-font-0 = FontAwesome:style=Regular:pixelsize=12;3
+font-0 = FontAwesome:style=Regular:pixelsize=10;3
 font-2 = "Wuncon Siji:pixelsize=10;3"
 font-1 = FontAwesome5Free:style=Solid:pixelsize=10;3
 ; font-1 = Weather Icons:style=Regular:size=10;2
@@ -66,7 +69,7 @@ font-4 = FontAwesome5Brands:style=Solid:pixelsize=10;3
 
 
 modules-left = i3 sp2
-modules-right = linux-ver sp1 volume sp1 battery sp1 wifi-network sp1 wired-network sp2 date sp2
+modules-right = linux-ver sp1 volume sp1 battery sp1 wifi-network sp1 wired-network sp2 date sp2 shutdownrestart sp3
 
 tray-position = right
 tray-padding = 0
@@ -88,13 +91,19 @@ cursor-click = pointer
 [module/sp1]
 type = custom/text
 content = " | "
-content-foreground = #93A1A1
+content-foreground = ${colors.foreground-alt}
 content-background = ${colors.background-alt}
 
 [module/sp2]
 type = custom/text
 content = " |"
-content-foreground = #93A1A1
+content-foreground = ${colors.foreground-alt}
+content-background = ${colors.background-alt}
+
+[module/sp3]
+type = custom/text
+content = "|"
+content-foreground = ${colors.foreground-alt}
 content-background = ${colors.background-alt}
 
 [module/i3]
@@ -142,21 +151,15 @@ label-separator =
 label-separator-padding = 0
 label-separator-foreground = #fff
 
-[module/weather]
-type = custom/script
-exec = ~/.config/polybar/scripts/weather-openmap.sh
-interval = 600
+[module/shutdownrestart]
+;label-connected = %{A1:nm-connection-editor:}%essid%%{A}
+type = custom/text
+label = %{A1:~/.config/scripts/shutdownrestart:}%{A}
 
 [module/linux-ver]
 type = custom/script
 exec = uname -r
 interval = 600
-
-[module/updates]
-type = custom/script
-exec = ~/.config/polybar/scripts/arch_updates.sh
-interval = 60
-label = %output%
 
 [module/date]
 type = internal/date
@@ -201,7 +204,7 @@ label-volume-background = ${colors.background-alt}
 format-volume = <ramp-volume> <label-volume>
 
 ;format-muted-foreground = ${colors.foreground-alt}
-format-muted-foreground = #FFaaaa
+format-muted-foreground = ${colors.foreground-fail}
 format-muted-background = ${colors.background-alt}
 label-muted = MUTED  
 
@@ -231,7 +234,7 @@ format-charging = <label-charging> <ramp-capacity>
 
 
 label-full = "full  "
-label-full-foreground = #aaFFaa
+label-full-foreground = ${colors.foreground-ok}
 label-low = "%percentage%%  "
 label-low-foreground = #FFaaaa
 
@@ -244,10 +247,10 @@ interval = 3.0
 accumulate-stats = true
 unknown-as-up = true
 label-connected = %linkspeed% 
-label-connected-foreground = #aaFFaa
+label-connected-foreground = ${colors.foreground-ok}
 
 label-disconnected = %linkspeed% 
-label-disconnected-foreground = #FFaaaa
+label-disconnected-foreground = ${colors.foreground-fail}
 
 [module/wifi-network]
 type = internal/network
@@ -257,10 +260,10 @@ interface = wlan0
 
 ; format-connected = <ramp-signal> <label-connected>
 label-connected = %{A1:~/.config/scripts/wifimanager:}%essid% %{A}
-label-connected-foreground = #aaFFaa
+label-connected-foreground = ${colors.foreground-ok}
 
 label-disconnected = "disconnected "
-label-disconnected-foreground = #FFaaaa
+label-disconnected-foreground = ${colors.foreground-fail}
 
 interface-type = wireless
 
