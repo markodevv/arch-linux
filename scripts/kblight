@@ -1,0 +1,21 @@
+#!/bin/bash
+
+VENDOR="asus::kbd_backlight"
+
+current=$(cat "/sys/class/leds/$VENDOR/brightness")
+
+case "$1" in
+  up)
+    new=$((current + 1))
+    brightnessctl --device="asus::kbd_backlight" set $new
+    ;;
+  down)
+    new=$((current - 1))
+    brightnessctl --device="asus::kbd_backlight" set $new
+    ;;
+  *)
+    echo "Usage: $0 {up|down}"
+    exit 1
+    ;;
+esac
+

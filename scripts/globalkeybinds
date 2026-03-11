@@ -1,0 +1,8 @@
+#!/bin/bash
+setxkbmap -option caps:escape
+xmodmap -e "keycode 62 = slash question"
+
+xset r rate 200 40
+xinput set-prop 10 "libinput Accel Speed" 0.0
+xinput set-prop 10 "libinput Accel Profile Enabled" 0, 1
+

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+ghostty --working-directory="/home/marko/work/sorc" -e "nvim" & disown
+
