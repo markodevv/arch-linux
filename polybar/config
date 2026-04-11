@@ -250,7 +250,7 @@ label-low-foreground = #FFaaaa
 [module/wired-network]
 
 type = internal/network
-interface = enp4s0f3u2u4
+;interface = eenp4s0f3u1u4
 interface-type = wired
 interval = 3.0
 accumulate-stats = true
@@ -271,7 +271,7 @@ interface = wlan0
 label-connected = %{A1:~/.config/scripts/wifimanager:}%essid% %{A}
 label-connected-foreground = ${colors.foreground-ok}
 
-label-disconnected = "disconnected "
+label-disconnected = %{A1:~/.config/scripts/wifimanager:}disconnected %{A}
 label-disconnected-foreground = ${colors.foreground-fail}
 
 interface-type = wireless

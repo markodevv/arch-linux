@@ -10,7 +10,8 @@ source /usr/share/cachyos-zsh-config/cachyos-config.zsh
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-export PATH=$PATH:/home/marko/programs/zig-0.15.2
+#export PATH=$PATH:/home/marko/programs/zig-0.15.2
+export PATH=$PATH:/home/marko/programs/zig-0.16.0
 export PATH=$PATH:/home/marko/programs/zls
 export PATH=$PATH:/home/marko/programs/nnd
 export PATH=$PATH:/home/marko/programs/renderdoc_1.41/bin

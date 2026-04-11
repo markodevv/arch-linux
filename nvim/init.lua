@@ -768,7 +768,7 @@ local function debug_project()
   local path = vim.fn.expand("%:p")      -- full path
   local line = vim.fn.line(".")          -- current line number
 
-  if vim.endswith(path, ".zig") then
+  if vim.endswith(path, ".zig") or vim.endswith(path, ".cpp") then
     table.insert(cmd, "--breakpoint")
     table.insert(cmd, path .. ":" .. line);
   end
