@@ -111,7 +111,7 @@ require'lspconfig'.ccls.setup{
 }
 
 -- Disable anoying diagnostics
-vim.diagnostic.disable();
+--vim.diagnostic.disable();
 
 --require('lspconfig')['clangd'].setup{
 --  on_attach = on_attach,

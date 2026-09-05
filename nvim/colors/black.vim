@@ -34,6 +34,7 @@ let s:var="#b0ae7d"
 let s:warning="#c13e3e"
 let s:warning2="#cf8d29"
 
+
 exe 'hi Normal guifg=#d9cba7 guibg='s:bg
 exe 'hi NormalFloat guifg='s:fg' guibg='s:bg
 exe 'hi Cursor guifg='s:bg' guibg='s:fg
