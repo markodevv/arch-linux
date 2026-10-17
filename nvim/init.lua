@@ -26,6 +26,7 @@ require('packer').startup(function(use)
   use 'wbthomason/packer.nvim'
   use "ray-x/lsp_signature.nvim"
   use "Tetralux/odin.vim"
+  use "rluba/jai.vim"
 end);
 
 ------------------
@@ -105,10 +106,16 @@ require'lspconfig'.ccls.setup{
   on_attach = on_attach,
   flags = lsp_flags,
 }
-require'lspconfig'.ccls.setup{
+
+vim.lsp.config("jails", {
+  cmd = {"/home/marko/programs/jails/jails"},
+  filetypes = {"jai"},
+  root_markers = {"jails.json", ".git"},
   on_attach = on_attach,
   flags = lsp_flags,
-}
+})
+vim.lsp.enable("jails")
+
 
 -- Disable anoying diagnostics
 --vim.diagnostic.disable();
@@ -185,6 +192,7 @@ local lang_list = {
   "cpp",
   "c",
   "zig",
+  "jai",
 }
 
 local project_dir = vim.fn.getcwd();
@@ -198,6 +206,7 @@ local error_formats =
   ["c"] = "%f:%l:%c: error: %m", -- clang
   ["odin"] = "%f(%l:%c) Error: %m",
   ["zig"] = "%f:%l:%c: error: %m",
+  ["jai"] = "%f:%l\\,%c: Error: %m",
 }
 
 local file_greps = 
@@ -206,6 +215,7 @@ local file_greps =
   ["c"] = "**/*.cpp **/*.h **/*.hpp **/*.c",
   ["odin"] = "**/*.odin **/*.hlsl **/*.hlsli",
   ["zig"] = "**/*.zig **/*.hlsl **/*.hlsli",
+  ["jai"] = "**/*.jai **/*.hlsl **/*.hlsli",
 }
 
 local function_regex =
@@ -214,7 +224,8 @@ local function_regex =
   ["lua"] = {"\\v^((\\w[*&]?)+\\s+){1,3}(\\w(::)?)+\\(.*", "\\v(\\w(::)?)+\\(.*"},
   ["c"] = {"\\v^((\\w[*&]?)+\\s+){1,3}(\\w(::)?)+\\(.*", "\\v(\\w(::)?)+\\(.*"},
   ["odin"] = {"\\v^(\\w+\\s+::\\s+(#\\w+\\s+){0,2}proc(\\s+\"\\w+\"\\s+)?\\()", "\\v^\\w+"},
-  ["zig"] = {"\\v^(\\s*(pub\\s+)?(export\\s+)?fn\\s+\\w+\\s*\\()", "\\v^\\s*(pub\\s+)?(export\\s+)?fn\\s+\\zs\\w+"}
+  ["zig"] = {"\\v^(\\s*(pub\\s+)?(export\\s+)?fn\\s+\\w+\\s*\\()", "\\v^\\s*(pub\\s+)?(export\\s+)?fn\\s+\\zs\\w+"},
+  ["jai"] = {"\\v^(\\w+\\s*::\\s*(inline\\s+|no_inline\\s+)?\\()", "\\v^\\w+"},
 }
 
 

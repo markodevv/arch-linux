@@ -33,9 +33,10 @@ let s:type="#f9d302"
 let s:var="#b0ae7d"
 let s:warning="#c13e3e"
 let s:warning2="#cf8d29"
+let s:normal="#d9cba7"
 
 
-exe 'hi Normal guifg=#d9cba7 guibg='s:bg
+exe 'hi Normal guifg='s:normal' guibg='s:bg
 exe 'hi NormalFloat guifg='s:fg' guibg='s:bg
 exe 'hi Cursor guifg='s:bg' guibg='s:fg
 exe 'hi CursorLine  guibg='s:bg2
@@ -72,7 +73,7 @@ exe 'hi ErrorMsg guifg='s:warning' guibg='s:bg2''
 exe 'hi WarningMsg guifg='s:fg' guibg='s:warning2
 exe 'hi Float guifg='s:const
 exe 'hi Function guifg='s:func
-exe 'hi Identifier guifg='s:type''
+exe 'hi Identifier guifg='s:normal''
 exe 'hi Keyword guifg='s:keyword''
 exe 'hi Label guifg='s:var
 exe 'hi NonText guifg='s:bg4' guibg='s:bg2
