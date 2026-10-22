@@ -107,14 +107,23 @@ require'lspconfig'.ccls.setup{
   flags = lsp_flags,
 }
 
-vim.lsp.config("jails", {
-  cmd = {"/home/marko/programs/jails/jails"},
+-- vim.lsp.config("jails", {
+--  cmd = {"/home/marko/programs/jails/jails"},
+--  filetypes = {"jai"},
+--  root_markers = {"jails.json", ".git"},
+--  on_attach = on_attach,
+--  flags = lsp_flags,
+--})
+--vim.lsp.enable("jails")
+
+vim.lsp.config("jai-lsp", {
+  cmd = {"/home/marko/programs/jai-lsp/jai-lsp-linux-x64"},
   filetypes = {"jai"},
   root_markers = {"jails.json", ".git"},
   on_attach = on_attach,
   flags = lsp_flags,
 })
-vim.lsp.enable("jails")
+vim.lsp.enable("jai-lsp")
 
 
 -- Disable anoying diagnostics
@@ -128,8 +137,6 @@ vim.lsp.enable("jails")
 require"lsp_signature".setup {
   hi_parameter="IncSearch",
 }
-
-------------------
 
 --config_file = "~/AppData/Local/nvim/init.lua<CR>"
 config_file = "~/.config/nvim/init.lua<CR>"
@@ -211,11 +218,11 @@ local error_formats =
 
 local file_greps = 
 {
-  ["cpp"] = "**/*.cpp **/*.h **/*.hpp **/*.c",
-  ["c"] = "**/*.cpp **/*.h **/*.hpp **/*.c",
-  ["odin"] = "**/*.odin **/*.hlsl **/*.hlsli",
-  ["zig"] = "**/*.zig **/*.hlsl **/*.hlsli",
-  ["jai"] = "**/*.jai **/*.hlsl **/*.hlsli",
+  ["cpp"] = {"**/*.cpp **/*.h **/*.hpp **/*.c"},
+  ["c"] = {"**/*.cpp **/*.h **/*.hpp **/*.c"},
+  ["odin"] = {"**/*.odin **/*.hlsl **/*.hlsli"},
+  ["zig"] = {"**/*.zig **/*.hlsl **/*.hlsli"},
+  ["jai"] = {"**/*.jai", "**/*.hlsl", "**/*.hlsli"},
 }
 
 local function_regex =
@@ -285,24 +292,14 @@ local function handle_pair(input, open, close)
   local line = vim.api.nvim_get_current_line() 
   local char = line.byte(line, pos[2]+1)
   local input_char = string.byte(input)
-  local cmd = ""
 
   if (char == input_char) then
-    cmd = vim.api.nvim_replace_termcodes("<Right>", true, false, true)
-  else
-    if (input == open) then
-      local next_char = line.byte(line, pos[2]+2)
-      if (next_char ~= string.byte(close)) then
-        cmd = open .. close .. vim.api.nvim_replace_termcodes("<Left>", true, false, true)
-      else
-        cmd = close
-      end
-    else
-      cmd = input
-    end
+    return "<C-G>U<Right>"
   end
-
-  vim.api.nvim_feedkeys(cmd, 'n', true)
+  if (input == open) then
+    return open .. close .. "<C-G>U<Left>"
+  end
+  return input
 end
 
 local function handle_enter()
@@ -328,31 +325,31 @@ local function handle_enter()
 end
 
 local function handle_open_paren() 
-  handle_pair('(', '(', ')')
+  return handle_pair('(', '(', ')')
 end
 
 local function handle_close_paren() 
-  handle_pair(')', '(', ')')
+  return handle_pair(')', '(', ')')
 end
 
 local function handle_open_brace() 
-  handle_pair('{', '{', '}')
+  return handle_pair('{', '{', '}')
 end
 
 local function handle_close_brace() 
-  handle_pair('}', '{', '}')
+  return handle_pair('}', '{', '}')
 end
 
 local function handle_open_bracket() 
-  handle_pair('[', '[', ']')
+  return handle_pair('[', '[', ']')
 end
 
 local function handle_close_bracket() 
-  handle_pair(']', '[', ']')
+  return handle_pair(']', '[', ']')
 end
 
 local function handle_quotes()
-  handle_pair('"', '"', '"')
+  return handle_pair('"', '"', '"')
 end
 
 local function handle_small_quotes()
@@ -720,7 +717,7 @@ local function goto_mark()
   vim.api.nvim_win_set_cursor(0, { mark[1], mark[2] })
 end
 
-local function grep_internal(directory, pattern)
+local function grep_internal(directory, patterns)
 
   --if use_file_dir then
     --directory = get_curr_buf_directory_path()
@@ -730,7 +727,13 @@ local function grep_internal(directory, pattern)
   end
 
   local on_input = function(input)
-    vim.cmd("silent! vimgrep " .. "\"" .. input .. "\"" .. directory .. pattern)
+    local files = {}
+    for _, pattern in ipairs(patterns) do
+      table.insert(files, directory .. pattern)
+    end
+    vim.cmd("silent! vimgrep /" .. input .. "/" .. table.concat(files, " "))
+    --vim.cmd("silent! vimgrep " .. "\"" .. input .. "\"" .. directory .. pattern)
+
   end
 
   vim.ui.input({
@@ -740,11 +743,16 @@ end
 
 local function project_grep()
   file_grep = file_greps[language]
-  grep_internal("", file_grep)
+  grep_internal(" ", file_grep)
+end
+
+local function jai_modules_grep()
+  file_grep = file_greps[language]
+  grep_internal(" ~/programs/jai/modules", file_grep)
 end
 
 local function grep()
-  grep_internal("", "*.*")
+  grep_internal(" ", "*.*")
 end
 
 local function valid_language(lang)
@@ -939,7 +947,7 @@ vim.keymap.set("n", "<S-F3>", grep)
 vim.keymap.set("n", "m", mark)
 vim.keymap.set("n", "<S-m>", goto_mark)
 vim.keymap.set("n", "<F3>", project_grep)
-vim.keymap.set("n", "<F4>", run_project)
+vim.keymap.set("n", "<F4>", jai_modules_grep)
 vim.keymap.set("n", "<C-r>", "<C-q>");
 vim.keymap.set("n", "<space>d", ":Explore<CR>")
 vim.keymap.set("n", "<A-p>", goto_function)
@@ -959,12 +967,12 @@ vim.keymap.set("i", "<C-t>", lsp_complete, {expr = true})
 vim.keymap.set("i", "<tab>", complete, {expr = true})
 vim.keymap.set("i", "<C-BS>", "<C-w>")
 vim.keymap.set("i", "<C-H>", "<C-w>")
-vim.keymap.set("i", "(", handle_open_paren)
-vim.keymap.set("i", ")", handle_close_paren)
-vim.keymap.set("i", "{", handle_open_brace)
-vim.keymap.set("i", "}", handle_close_brace)
-vim.keymap.set("i", "[", handle_open_bracket)
-vim.keymap.set("i", "]", handle_close_bracket)
+vim.keymap.set("i", "(", handle_open_paren, {expr = true})
+vim.keymap.set("i", ")", handle_close_paren, {expr = true})
+vim.keymap.set("i", "{", handle_open_brace, {expr = true})
+vim.keymap.set("i", "}", handle_close_brace, {expr = true})
+vim.keymap.set("i", "[", handle_open_bracket, {expr = true})
+vim.keymap.set("i", "]", handle_close_bracket, {expr = true})
 vim.keymap.set("i", "<CR>", handle_enter)
 
 
