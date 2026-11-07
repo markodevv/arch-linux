@@ -1,4 +1,7 @@
 ;; -*- lexical-binding: t; -*-
+(package-initialize)
+(setq custom-file "~/.emacs.d/.emacs.custom.el")
+
 (require 'package)
 
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -8,17 +11,18 @@
 (setq use-package-always-ensure t)
 
 (require 'jai-mode)
+(require 'ido)
 (load-theme 'dark t)
 
 (use-package evil
   :init
   (setq evil-want-keybinding nil
-	evil-want-C-u-scroll t
 	evil-undo-system 'undo-redo)
   :config
   (evil-mode 1))
 (use-package glsl-mode
   :mode ("\\.glsl\\'" "cs\\.sl\\'" "vs\\.sl\\'" "fs\\.sl\\'" "\\.slh\\'"))
+(use-package rg :ensure t) 
 
 ;; Looks
 (set-face-attribute 'default nil :family "Liberation Mono" :height 110)
@@ -35,7 +39,14 @@
 ;; Misc
 (blink-cursor-mode -1)
 (electric-pair-mode 1);
+(ido-mode 1)
 (setq make-backup-files nil)
+(setq inhibit-splash-screen t)
+(setq ring-bell-function 'ignore)
+(setq ls-lisp-dirs-first t)
+(setq vc-handled-backends nil)
+(setq dabbrev-check-other-buffers t)
+
 
 (defun visual-trim (cmd)
   "Return a command that drops the last selected char (charwise only), then runs CMD."
@@ -57,20 +68,14 @@
 (put 'project-file-globs 'safe-local-variable #'stringp)
 
 (add-to-list 'display-buffer-alist
-             '(is_quickfix-buffer
+             '(is-quickfix-buffer
                (display-buffer-reuse-window display-buffer-in-side-window)
                (side . bottom)
                (slot . 0)
                (window-height . 0.2)
-               (window-parameters (no-delete-other-windows, t))))
+               (window-parameters (no-delete-other-windows . t))))
 
-(defun toggle-compilation ()
-  (interactive)
-  (let ((win (get-buffer-window "*compilation*")))
-    (cond (win (delete-window win))
-          ((get-buffer "*compilation*") (pop-to-buffer "*compilation*")))))
-
-(defun is_quickfix-buffer (buf &optional _action)
+(defun is-quickfix-buffer (buf &optional _action)
   (with-current-buffer buf
     (derived-mode-p 'compilation-mode 'xref--xref-buffer-mode)))
 (setq completion-styles '(substring partial-completion flex)
@@ -79,7 +84,7 @@
 
 (defun toggle-quickfix ()
   (interactive)
-  (let ((win (seq-find (lambda (w) (is_quickfix-buffer (window-buffer w)))
+  (let ((win (seq-find (lambda (w) (is-quickfix-buffer (window-buffer w)))
                        (window-list))))
     (cond (win (delete-window win))
           ((buffer-live-p next-error-last-buffer)
@@ -88,35 +93,33 @@
 
 (defun build-project ()
   (interactive)
-  (let ((default-directory (if-let* ((p (project-current)))
-                               (project-root p)
-                             default-directory)))
+  (let ((default-directory (project-dir)))
     (compile build-command)))
 
 (defun project-dir ()
-  (if-let* ((p (project-current)))
-      (project-root p)
-    default-directory))
+  (or (locate-dominating-file default-directory ".dir-locals.el")
+      default-directory))
 
 (defun project-grep (regexp)
-  (interactive (list (read-string "Project grep:" nil nil)))
-  (rgrep regexp (or project-file-globs "*") (project-dir)))
+  (interactive "sProject grep: ")
+  (let ((default-directory (project-dir)))
+    (compilation-start
+     (format "rg -n --no-heading --color never -g \"{%s}\" -e %s ."
+             (string-join (split-string project-file-globs) ",")
+             (shell-quote-argument regexp))
+     'grep-mode)))
 
 (defun project-find-file-globs ()
   (interactive)
-  (let* ((root (project-root (project-current t)))
-         (regexps (mapcar #'wildcard-to-regexp
-                          (split-string (or project-file-globs "*"))))
-         (files (seq-filter
-                 (lambda (f)
-                   (seq-some (lambda (re) (string-match-p re f)) regexps))
-                 (project-files (project-current t))))
-         (names (mapcar (lambda (f) (file-relative-name f root)) files))
-         (choice (completing-read "Find file: " names nil t)))
-    (find-file (expand-file-name choice root))))
-
-;; Completion
-(setq dabbrev-check-other-buffers t)
+  (let* ((root (project-dir))
+         (re (mapconcat #'wildcard-to-regexp
+                        (split-string (or project-file-globs "*"))
+                        "\\|"))
+         (files (directory-files-recursively
+                 root re nil
+                 (lambda (dir) (not (string-match-p "/\\.git/?\\'" dir)))))
+         (names (mapcar (lambda (f) (file-relative-name f root)) files)))
+    (find-file (expand-file-name (completing-read "Find file: " names nil t) root))))
 
 ;; Keybinds
 (evil-global-set-key 'normal (kbd "C-o") #'project-find-file-globs)
@@ -151,15 +154,5 @@
     "d" #'dired-create-directory
     "D" #'dired-do-delete
     ))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages '(evil glsl-mode)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+
+(load-file custom-file)
