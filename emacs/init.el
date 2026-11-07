@@ -1,14 +1,14 @@
 ;; -*- lexical-binding: t; -*-
 (require 'package)
 
-(add-to-list 'package-archives '("melpa", "https://melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'load-path "~/.emacs.d/lisp")
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 
+(setq use-package-always-ensure t)
+
 (require 'jai-mode)
 (load-theme 'dark t)
-
-(setq use-package-always-ensure t)
 
 (use-package evil
   :init
@@ -17,6 +17,8 @@
 	evil-undo-system 'undo-redo)
   :config
   (evil-mode 1))
+(use-package glsl-mode
+  :mode ("\\.glsl\\'" "cs\\.sl\\'" "vs\\.sl\\'" "fs\\.sl\\'" "\\.slh\\'"))
 
 ;; Looks
 (set-face-attribute 'default nil :family "Liberation Mono" :height 110)
@@ -52,6 +54,7 @@
 
 ;; Mark vars as safe, to avoid anoying prompt when opening files
 (put 'build-command 'safe-local-variable #'stringp)
+(put 'project-file-globs 'safe-local-variable #'stringp)
 
 (add-to-list 'display-buffer-alist
              '(is_quickfix-buffer
@@ -148,3 +151,15 @@
     "d" #'dired-create-directory
     "D" #'dired-do-delete
     ))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages '(evil glsl-mode)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
