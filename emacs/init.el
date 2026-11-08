@@ -1,6 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 (package-initialize)
 (setq custom-file "~/.emacs.d/.emacs.custom.el")
+(setq dir-locals-file "project.el")
 
 (require 'package)
 
@@ -14,15 +15,23 @@
 (require 'ido)
 (load-theme 'dark t)
 
+(use-package magit)
 (use-package evil
   :init
-  (setq evil-want-keybinding nil
-	evil-undo-system 'undo-redo)
+  (setq evil-want-keybinding nil)
+	(setq evil-undo-system 'undo-redo)
+  (setq evil-want-integration t)
   :config
   (evil-mode 1))
+(use-package evil-collection
+  :ensure t
+  :after evil
+  :config
+  (evil-collection-init 'magit))
 (use-package glsl-mode
   :mode ("\\.glsl\\'" "cs\\.sl\\'" "vs\\.sl\\'" "fs\\.sl\\'" "\\.slh\\'"))
 (use-package rg :ensure t) 
+(use-package zig-mode)
 
 ;; Looks
 (set-face-attribute 'default nil :family "Liberation Mono" :height 110)
@@ -46,7 +55,8 @@
 (setq ls-lisp-dirs-first t)
 (setq vc-handled-backends nil)
 (setq dabbrev-check-other-buffers t)
-
+(setq scroll-conservatively 101)
+(setq scroll-margin 3)
 
 (defun visual-trim (cmd)
   "Return a command that drops the last selected char (charwise only), then runs CMD."
@@ -72,7 +82,7 @@
                (display-buffer-reuse-window display-buffer-in-side-window)
                (side . bottom)
                (slot . 0)
-               (window-height . 0.2)
+               (window-height . 0.25)
                (window-parameters (no-delete-other-windows . t))))
 
 (defun is-quickfix-buffer (buf &optional _action)
@@ -144,6 +154,9 @@
 (evil-global-set-key 'normal "P" #'evil-paste-after)
 (evil-global-set-key 'visual "y" (visual-trim #'evil-yank))
 (evil-global-set-key 'visual "s" (lambda () (interactive) (evil-ex "'<,'>s/")))
+
+; Magit
+(evil-global-set-key 'normal "s" #'magit-stage)
 
 (with-eval-after-load 'dired
   (evil-set-initial-state 'dired-normal 'normal)
