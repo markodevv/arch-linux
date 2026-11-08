@@ -240,9 +240,11 @@
 (evil-global-set-key 'visual "y" (visual-trim #'evil-yank))
 (evil-global-set-key 'visual "s" (lambda () (interactive) (evil-ex "'<,'>s/")))
 (evil-global-set-key 'normal (kbd "C-g C-g") #'magit-status)
+(evil-global-set-key 'normal (kbd "C-f") #'evil-search-word-forward)
 
 ; Custom start screen
 (evil-define-key 'normal projects-buffer-mode-map "R" #'start-screen-remove-project)
+(evil-define-key 'normal projects-buffer-mode-map "g" #'start-screen)
 
 ; Magit
 (with-eval-after-load 'magit
@@ -260,6 +262,7 @@
   (evil-define-key 'normal dired-mode-map
     (kbd "RET") #'dired-find-file
     "f" #'find-file
+    "g" #'revert-buffer
     "R" #'dired-do-rename
     "d" #'dired-create-directory
     "D" #'dired-do-delete
