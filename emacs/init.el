@@ -46,6 +46,7 @@
 ;; Indentation
 (setq-default indent-tabs-mode nil tab-width 2 c-basic-offset 2)
 (setq-default js-indent-level 2)
+(setq-default evil-shift-width 2)
 
 ;; Misc
 (blink-cursor-mode -1)
@@ -58,6 +59,7 @@
 (setq dabbrev-check-other-buffers t)
 (setq scroll-conservatively 101)
 (setq scroll-margin 3)
+(setq dired-dwim-target t)
 
 (if (eq system-type 'windows-nt)
     (progn
@@ -237,10 +239,11 @@
 (evil-global-set-key 'normal (kbd "<f3>") #'project-grep)
 (evil-global-set-key 'normal "p" #'evil-paste-before)
 (evil-global-set-key 'normal "P" #'evil-paste-after)
-(evil-global-set-key 'visual "y" (visual-trim #'evil-yank))
-(evil-global-set-key 'visual "s" (lambda () (interactive) (evil-ex "'<,'>s/")))
 (evil-global-set-key 'normal (kbd "C-g C-g") #'magit-status)
 (evil-global-set-key 'normal (kbd "C-f") #'evil-search-word-forward)
+(evil-global-set-key 'visual "y" (visual-trim #'evil-yank))
+(evil-global-set-key 'visual "s" (lambda () (interactive) (evil-ex "'<,'>s/")))
+(evil-global-set-key 'visual "+" #'indent-region)
 
 ; Custom start screen
 (evil-define-key 'normal projects-buffer-mode-map "R" #'start-screen-remove-project)
@@ -263,9 +266,16 @@
     (kbd "RET") #'dired-find-file
     "f" #'find-file
     "g" #'revert-buffer
+    "m" #'dired-mark
+    "u" #'dired-unmark
+    "C" #'dired-do-copy
     "R" #'dired-do-rename
     "d" #'dired-create-directory
     "D" #'dired-do-delete
-    ))
+    )
+  (evil-define-key 'visual dired-mode-map
+    "m" #'dired-mark
+    "u" #'dired-unmark
+  ))
 
 (load-file custom-file)
