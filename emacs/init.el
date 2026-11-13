@@ -1,6 +1,4 @@
 ;; -*- lexical-binding: t; -*-
-(package-initialize)
-
 (require 'package)
 
 (setq custom-file "~/.emacs.d/.emacs.custom.el")
@@ -192,6 +190,37 @@
   (or (locate-dominating-file default-directory dir-locals-file)
       default-directory))
 
+(defun project-read-settings (root)
+  "Read project settings from ROOT/project.el."
+  (let ((file (expand-file-name "project.el" root)))
+    (when (file-exists-p file)
+      (with-temp-buffer
+        (insert-file-contents file)
+        (let* ((data (read (current-buffer)))
+               (settings (cdr (assq nil data))))
+          settings)))))
+
+(defun project-grep-at (root globs regexp name)
+  (let ((default-directory root))
+    (compilation-start
+     (format "rg -n --no-heading --color never -g \"{%s}\" -e %s ."
+             (string-join (split-string (or globs "*")) ",")
+             (shell-quote-argument regexp))
+     'grep-mode
+     (lambda (_) (format "*grep: %s*" name)))))
+
+(defun project-grep-other ()
+  (interactive)
+  (let* ((name (completing-read
+                "Project: "
+                (mapcar #'car projects)
+                nil t))
+         (regexp (read-string "Project grep: "))
+         (root (cdr (assoc name projects)))
+         (settings (project-read-settings root))
+         (globs (or (cdr (assq 'project-file-globs settings)) "*")))
+    (project-grep-at root globs regexp name)))
+
 (defun project-grep (regexp)
   (interactive "sProject grep: ")
   (let ((default-directory (project-dir)))
@@ -237,6 +266,7 @@
 (evil-global-set-key 'normal (kbd "M-e") #'next-error)
 (evil-global-set-key 'normal (kbd "M-q") #'previous-error)
 (evil-global-set-key 'normal (kbd "<f3>") #'project-grep)
+(evil-global-set-key 'normal (kbd "<f2>") #'project-grep-other)
 (evil-global-set-key 'normal "p" #'evil-paste-before)
 (evil-global-set-key 'normal "P" #'evil-paste-after)
 (evil-global-set-key 'normal (kbd "C-g C-g") #'magit-status)
